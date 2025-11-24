@@ -3,13 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>משחק זיכרון</title>
+<title>משחק זיכרון 🍎🍌🍇</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <h1>משחק זיכרון 🍎🍌🍇</h1>
-<p>מהלכים: <span id="moves">0</span></p>
+
+<div>
+    <button class="levelBtn" data-level="easy">קל 4x4</button>
+    <button class="levelBtn" data-level="medium">בינוני 5x4</button>
+    <button class="levelBtn" data-level="hard">קשה 6x6</button>
+</div>
+
+<p>מהלכים: <span id="moves">0</span> | זמן: <span id="timer">0</span> שניות</p>
+<p id="bestScore">שיא: -</p>
 <div id="grid"></div>
 <button id="restartBtn">התחל משחק חדש</button>
 <p id="message"></p>

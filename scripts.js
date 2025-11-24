@@ -2,16 +2,52 @@ const grid = document.getElementById("grid");
 const movesDisplay = document.getElementById("moves");
 const restartBtn = document.getElementById("restartBtn");
 const message = document.getElementById("message");
+const bestScoreDisplay = document.getElementById("bestScore");
+const timerDisplay = document.getElementById("timer");
+const levelBtns = document.querySelectorAll(".levelBtn");
 
-let cardValues = ["🍎","🍎","🍌","🍌","🍇","🍇","🍉","🍉","🍓","🍓","🍒","🍒","🥝","🥝","🍍","🍍"];
+let cardValues = ["🍎","🍌","🍇","🍉","🍓","🍒","🥝","🍍","🥑","🍑","🍋","🍊","🍐","🍏","🍈","🥭","🍅","🥕"];
 let firstCard = null;
 let secondCard = null;
 let lockBoard = false;
 let moves = 0;
 let matches = 0;
+let timer;
+let seconds = 0;
+
+let gridRows = 4;
+let gridCols = 4;
+let currentLevel = "easy"; 
 
 function shuffle(array) {
     return array.sort(() => Math.random() - 0.5);
+}
+
+function startTimer() {
+    clearInterval(timer);
+    seconds = 0;
+    timerDisplay.textContent = seconds;
+    timer = setInterval(() => {
+        seconds++;
+        timerDisplay.textContent = seconds;
+    }, 1000);
+}
+
+function displayBestScore() {
+    const best = JSON.parse(localStorage.getItem("bestScore_" + currentLevel));
+    if (best) {
+        bestScoreDisplay.textContent = `שיא (${currentLevel}): ${best.moves} מהלכים, ${best.time} שניות`;
+    } else {
+        bestScoreDisplay.textContent = `שיא (${currentLevel}): -`;
+    }
+}
+
+function saveBestScore() {
+    const best = JSON.parse(localStorage.getItem("bestScore_" + currentLevel));
+    if (!best || moves < best.moves || (moves === best.moves && seconds < best.time)) {
+        localStorage.setItem("bestScore_" + currentLevel, JSON.stringify({moves, time: seconds}));
+    }
+    displayBestScore();
 }
 
 function createBoard() {
@@ -24,16 +60,41 @@ function createBoard() {
     secondCard = null;
     lockBoard = false;
 
-    let shuffled = shuffle([...cardValues]);
+    startTimer();
 
-    shuffled.forEach((value) => {
+    const totalCards = gridRows * gridCols;
+    const numPairs = totalCards / 2;
+
+    let selectedValues = cardValues.slice(0, numPairs);
+    let boardValues = shuffle([...selectedValues, ...selectedValues]);
+
+    grid.style.gridTemplateColumns = `repeat(${gridCols}, 100px)`;
+
+    boardValues.forEach(value => {
         const card = document.createElement("div");
         card.classList.add("card");
+
+        const cardInner = document.createElement("div");
+        cardInner.classList.add("card-inner");
+
+        const cardFront = document.createElement("div");
+        cardFront.classList.add("card-front");
+        cardFront.textContent = value;
+
+        const cardBack = document.createElement("div");
+        cardBack.classList.add("card-back");
+
+        cardInner.appendChild(cardFront);
+        cardInner.appendChild(cardBack);
+        card.appendChild(cardInner);
+
         card.dataset.value = value;
-        card.textContent = value;  
         card.addEventListener("click", flipCard);
+
         grid.appendChild(card);
     });
+
+    displayBestScore();
 }
 
 function flipCard(e) {
@@ -62,8 +123,10 @@ function checkMatch() {
         firstCard = null;
         secondCard = null;
         matches++;
-        if (matches === cardValues.length / 2) {
-            message.textContent = "🎉 ניצחת! כל הזוגות נמצאו!";
+        if (matches === (gridRows * gridCols) / 2) {
+            message.textContent = `🎉 ניצחת! זמן: ${seconds} שניות`;
+            clearInterval(timer);
+            saveBestScore();
         }
     } else {
         lockBoard = true;
@@ -76,6 +139,19 @@ function checkMatch() {
         }, 1000);
     }
 }
+
+levelBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+        const level = btn.dataset.level;
+        currentLevel = level;
+
+        if (level === "easy") { gridRows = 4; gridCols = 4; }
+        if (level === "medium") { gridRows = 5; gridCols = 4; }
+        if (level === "hard") { gridRows = 6; gridCols = 6; }
+
+        createBoard();
+    });
+});
 
 restartBtn.addEventListener("click", createBoard);
 
