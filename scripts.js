@@ -14,6 +14,11 @@ let moves = 0;
 let matches = 0;
 let timer;
 let seconds = 0;
+const levels = {
+    easy:   { rows: 4, cols: 4 },
+    medium: { rows: 5, cols: 4 },
+    hard:   { rows: 6, cols: 6 }
+};
 
 let gridRows = 4;
 let gridCols = 4;
@@ -118,40 +123,56 @@ function flipCard(e) {
 
 function checkMatch() {
     if (firstCard.dataset.value === secondCard.dataset.value) {
-        firstCard.removeEventListener("click", flipCard);
-        secondCard.removeEventListener("click", flipCard);
-        firstCard = null;
-        secondCard = null;
-        matches++;
-        if (matches === (gridRows * gridCols) / 2) {
-            message.textContent = `🎉 ניצחת! זמן: ${seconds} שניות`;
-            clearInterval(timer);
-            saveBestScore();
-        }
+        handleMatch();
     } else {
-        lockBoard = true;
-        setTimeout(() => {
-            firstCard.classList.remove("flipped");
-            secondCard.classList.remove("flipped");
-            firstCard = null;
-            secondCard = null;
-            lockBoard = false;
-        }, 1000);
+        handleNoMatch();
     }
 }
+
+function handleMatch() {
+    firstCard.removeEventListener("click", flipCard);
+    secondCard.removeEventListener("click", flipCard);
+
+    firstCard = null;
+    secondCard = null;
+    matches++;
+
+    if (matches === (gridRows * gridCols) / 2) {
+        message.textContent = `🎉 ניצחת! זמן: ${seconds} שניות`;
+        clearInterval(timer);
+        saveBestScore();
+    }
+}
+
+function handleNoMatch() {
+    lockBoard = true;
+
+    setTimeout(() => {
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+    }, 1000);
+}
+
 
 levelBtns.forEach(btn => {
     btn.addEventListener("click", () => {
         const level = btn.dataset.level;
         currentLevel = level;
 
-        if (level === "easy") { gridRows = 4; gridCols = 4; }
-        if (level === "medium") { gridRows = 5; gridCols = 4; }
-        if (level === "hard") { gridRows = 6; gridCols = 6; }
+        gridRows = levels[level].rows;
+        gridCols = levels[level].cols;
+
+        levelBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
 
         createBoard();
     });
 });
+
 
 restartBtn.addEventListener("click", createBoard);
 
